@@ -59,9 +59,9 @@ def main(argv):
 #    files = files[:1]
     outf = open(i+'/prelim_out_{1}_{0:5d}.dat'.format(int(i),stat).replace(' ','0'),'w')
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat'))
-#    for j in np.arange(1,len(files)+1):
-    for j in np.arange(1,10):
-#       try:
+    for j in np.arange(1,len(files)+1):
+#    for j in np.arange(1,10):
+       try:
             exam = 'sers_{0:4d}'.format(j).replace(' ','0')
             
             
@@ -74,7 +74,7 @@ def main(argv):
             #instrument response on the background 
             load_rmf(sfile+".rmf")
             #background spectrum
-            load_bkg(i+"/summed_background_{0}_src.pi".format(i))
+            load_bkg(i+"/tsummed_background_{0}_src.pi".format(i))
             rmf = get_rmf()
             arf = get_arf()
             bkg = get_bkg()
@@ -236,9 +236,9 @@ def main(argv):
         
             outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,j,ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr))
         
-#       except:
-##########Write out -9999 if cannot find solution
-#            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
+       except:
+#########Write out -9999 if cannot find solution
+            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
     outf.close()
 
 if __name__ == "__main__":
