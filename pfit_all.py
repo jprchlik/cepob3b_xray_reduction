@@ -74,7 +74,7 @@ def main(argv):
             #instrument response on the background 
             load_rmf(sfile+".rmf")
             #background spectrum
-            load_bkg(i+"/tsummed_background_{0}_src.pi".format(i))
+            load_bkg(i+"/summed_background_{0}_src.pi".format(i))
             rmf = get_rmf()
             arf = get_arf()
             bkg = get_bkg()
