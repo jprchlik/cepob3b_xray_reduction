@@ -47,7 +47,7 @@ def main(argv):
         elif opt in ('-w','--wstat'):
             wsta = True
 #changed to cstat to check background issue
-            stat = 'cstat'
+            stat = 'wstat'
 
     set_analysis("energy")
     files = glob.glob(i+diri+'*bkg.pi')
@@ -82,7 +82,7 @@ def main(argv):
 #            notice_id(1,mine,maxe)
             if chid:
 #Skipping background subtraction for now
-#                subtract()
+                subtract()
 #group points in bins of at least 10
                 group_counts(8)
 #            save_grouping(sfile+"_group_10.pi",ascii=False,clobber=True)
@@ -101,7 +101,6 @@ def main(argv):
 
             
             
-            subtract()
             
             #Winston 2010 used xsraymond
 #           Scott Wolk says use xsvapec because it has more lines (9/1/16)
