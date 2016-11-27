@@ -1,3 +1,4 @@
+import matplotlib as mpl
 import astropy.io.fits as pyfits
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +15,7 @@ class format_image:
     def __init__(self,epoch,vmin=0.8,vmax=100.,scale='log'):
 
         self.sdir = '{0:4d}/'.format(epoch)
+        self.epoch = epoch
       
         self.fname = self.sdir+'obs{0:4d}_img.fits'.format(epoch)
         self.scale = scale
@@ -83,14 +85,36 @@ class format_image:
         w,h = float(fstr[2])*self.fits.header['CDELT1'],float(fstr[3])*self.fits.header['CDELT2']
         a   = float(fstr[4])
         return x,y,np.abs(w),np.abs(h),a
+
+
+    def rot_data(self,p,rotation):
+        t_start = self.ax.transData
+        t = mpl.transforms.Affine2D().rotate_deg(rotation)
+        t_end = t_start + t
+        
+        print dir(p)
+        p.set_transformation(t_end)
+        print 'HEERRRE'
+
+        return p 
+
 #add patches to plot
-    def add_patches(self,r):
+    def add_patches(self,r,rotation=0):
         patch_list, artist_list = r.get_mpl_patches_texts()
+
+            
+
         # ax is a mpl Axes object
         for p in patch_list:
+    #add rotation for asci region
+            if rotation != 0:
+                p = self.rot_data(p,rotation)
             self.ax.add_patch(p)
         for t in artist_list:
-           self.ax.add_artist(t)
+    #add rotation for asci region text
+            if rotation != 0:
+                t = self.rot_data(t,rotation)
+            self.ax.add_artist(t)
 
 #plot source regions
     def plot_starreg(self):
@@ -113,6 +137,7 @@ class format_image:
             m = i.replace('Ellipse(','').replace(')','').split(',')
             m[2] = float(m[2])*2.
             m[3] = float(m[3])*2.
+#crate region with double width and height 
             n = 'Ellipse({0},{1},{2:6.5f},{3:6.5f},{4})'.format(m[0],m[1],m[2],m[3],m[4])
             r = pyregion.parse(n).as_imagecoord(self.fits.header)
             
@@ -121,8 +146,15 @@ class format_image:
   
 
     def plot_backreg(self):
-        reg = np.loadtxt('ascii_region.reg')
-        print 'Not implemented'
+#Doesn't work for now
+#        asciir = 'ascii_default.reg'
+#        r = pyregion.open(asciir).as_imagecoord(self.fits.header)
+#   
+#        self.add_patches(r,rotation=self.fits.header['ROLL_PNT'])
+        asciir = self.sdir+'boxes_e{0:5d}_asci.reg'.format(self.epoch).replace(' ','0')
+        r = pyregion.open(asciir).as_imagecoord(self.fits.header)
+        print r
+        self.add_patches(r)
 
 #Save figure
     def save_fig(self):
