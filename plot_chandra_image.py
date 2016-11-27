@@ -61,8 +61,9 @@ class format_image:
 
        self.plot_boundary()
 
-       self.fig, self.ax = plt.subplots(figsize=figsize,dpi=dpi)
-       self.ax.imshow(np.log10(self.fits.data),cmap=cmap,extent=self.extent,
+#       self.fig, self.ax = plt.subplots(figsize=figsize,dpi=dpi)
+#       self.ax.imshow(np.log10(self.fits.data),cmap=cmap,extent=self.extent,
+ 
                       vmin=np.log10(self.vmin),vmax=np.log10(self.vmax),origin=self.origin)
        if starreg:
            self.plot_starreg()
@@ -72,28 +73,28 @@ class format_image:
        self.save_fig()
 #parse ellipse
     def parse_ellipse(self,i):
-        fstr = i.replace('Ellipse','').replace('(','').replace(')','').split(',')
-        x,y = self.convert_exy(float(fstr[0]),float(fstr[1]))
+#        fstr = i.replace('Ellipse','').replace('(','').replace(')','').split(',')
+        fstr = i[0].coord_list
+        print fstr
+        print self.fits.header['CDELT1'],self.fits.header['CDELT2']
+        x,y = self.convert_pxy(float(fstr[0]),float(fstr[1]))
         w,h = float(fstr[2])*self.fits.header['CDELT1'],float(fstr[3])*self.fits.header['CDELT2']
         a   = float(fstr[4])
-        return x,y,w,h,a
+        print x,y,w,h,a
+        return x,y,np.abs(w),np.abs(h),a
 
 #plot source regions
     def plot_starreg(self):
         regs = np.loadtxt(self.sdir+'sources/wav.src.reg',dtype='str')
-        regs = regs[2:3]
         for i in regs:
-#            try:
-#                x,y,w,h,a = self.parse_ellipse(i)
-                print 'HERE'
-                print i
-                r = pyregion.parse('fk5;'+i).as_imagecoord(self.fits.header)
+            try:
+                r = pyregion.parse(i).as_imagecoord(self.fits.header)
+                x,y,w,h,a = self.parse_ellipse(r)
                 
-#                print x,y,w,h,a
                 ell = Ellipse(xy=(x,y),width=w,height=h,angle=a,color='green',linewidth=1.0,fill=None,zorder=50)
                 self.ax.add_patch(ell)
-#            except ValueError:
-#                print 'Failed for now'
+            except ValueError:
+                print 'Failed for now'
        
 
     def plot_backreg(self):
