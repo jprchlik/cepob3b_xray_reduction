@@ -72,6 +72,9 @@ class format_image:
        if backreg:
            self.plot_backreg()
 
+       self.ax.set_xlabel('RA')
+       self.ax.set_ylabel('Dec')
+
        self.save_fig()
 #parse ellipse
     def parse_ellipse(self,i):
@@ -80,6 +83,14 @@ class format_image:
         w,h = float(fstr[2])*self.fits.header['CDELT1'],float(fstr[3])*self.fits.header['CDELT2']
         a   = float(fstr[4])
         return x,y,np.abs(w),np.abs(h),a
+#add patches to plot
+    def add_patches(self,r):
+        patch_list, artist_list = r.get_mpl_patches_texts()
+        # ax is a mpl Axes object
+        for p in patch_list:
+            self.ax.add_patch(p)
+        for t in artist_list:
+           self.ax.add_artist(t)
 
 #plot source regions
     def plot_starreg(self):
@@ -88,18 +99,26 @@ class format_image:
             try:
                 r = pyregion.parse(i).as_imagecoord(self.fits.header)
                 r[0].attr[1]['color'] = 'green'
-                patch_list, artist_list = r.get_mpl_patches_texts()
-
-                # ax is a mpl Axes object
-                for p in patch_list:
-                    self.ax.add_patch(p)
-                for t in artist_list:
-                    self.ax.add_artist(t)
-
+ 
+                self.add_patches(r)
 
             except ValueError:
                 print 'Failed for now'
-       
+                i = i.split('&')[0]
+                r = pyregion.parse(i).as_imagecoord(self.fits.header)
+                r[0].attr[1]['color'] = 'teal'
+                self.add_patches(r)
+ 
+#create an exclusion region
+            m = i.replace('Ellipse(','').replace(')','').split(',')
+            m[2] = float(m[2])*2.
+            m[3] = float(m[3])*2.
+            n = 'Ellipse({0},{1},{2:6.5f},{3:6.5f},{4})'.format(m[0],m[1],m[2],m[3],m[4])
+            r = pyregion.parse(n).as_imagecoord(self.fits.header)
+            
+            r[0].attr[1]['color'] = 'red'
+            self.add_patches(r)
+  
 
     def plot_backreg(self):
         reg = np.loadtxt('ascii_region.reg')
