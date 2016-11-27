@@ -4,6 +4,8 @@ import numpy as np
 from shapely.wkt  import dumps, loads
 from matplotlib.patches import Ellipse
 import pyregion
+from astropy.wcs import WCS
+from wcsaxes import WCSAxes
 
 
 class format_image:
@@ -26,13 +28,8 @@ class format_image:
         return xvals,yvals
 
     def convert_exy(self,x,y):
-#        xvals = (x-self.fits.header['CRPIX1']*3.)*self.fits.header['CDELT1']+self.fits.header['CRVAL1']
-#        yvals = (y-self.fits.header['CRPIX2']*3.)*self.fits.header['CDELT2']+self.fits.header['CRVAL2']
-#        xvals = (x-self.fits.header['CRPIX1P']-self.fits.header['CRVAL1P'])*self.fits.header['CDELT1P']
-#        yvals = (y-self.fits.header['CRPIX2P']-self.fits.header['CRVAL2P'])*self.fits.header['CDELT2P']
-#        xvals, yvals = self.convert_pxy(xvals,yvals)
-#        xvals, yvals = self.fix_project(xvals,yvals)
 #from http://cxc.harvard.edu/ciao/threads/regions/
+#DOES NOT WORK
         xvals = (187.2768)+np.tan((-0.000136667)*(x-(self.fits.header['CRVAL1P'])))
         yvals = (+2.0542 )+np.tan((+0.000136667)*(y-(self.fits.header['CRVAL2P'])))
 
@@ -62,7 +59,12 @@ class format_image:
        self.plot_boundary()
 
 #       self.fig, self.ax = plt.subplots(figsize=figsize,dpi=dpi)
-#       self.ax.imshow(np.log10(self.fits.data),cmap=cmap,extent=self.extent,
+#Set up WCS coordinate axes
+       self.fig = plt.figure()
+       wcs = WCS(self.fits.header)
+       self.ax = WCSAxes(self.fig,[0.1,0.1,0.8,0.8],wcs=wcs)
+       self.fig.add_axes(self.ax)
+       self.ax.imshow(np.log10(self.fits.data),cmap=cmap,
  
                       vmin=np.log10(self.vmin),vmax=np.log10(self.vmax),origin=self.origin)
        if starreg:
@@ -73,14 +75,10 @@ class format_image:
        self.save_fig()
 #parse ellipse
     def parse_ellipse(self,i):
-#        fstr = i.replace('Ellipse','').replace('(','').replace(')','').split(',')
         fstr = i[0].coord_list
-        print fstr
-        print self.fits.header['CDELT1'],self.fits.header['CDELT2']
         x,y = self.convert_pxy(float(fstr[0]),float(fstr[1]))
         w,h = float(fstr[2])*self.fits.header['CDELT1'],float(fstr[3])*self.fits.header['CDELT2']
         a   = float(fstr[4])
-        print x,y,w,h,a
         return x,y,np.abs(w),np.abs(h),a
 
 #plot source regions
@@ -89,10 +87,16 @@ class format_image:
         for i in regs:
             try:
                 r = pyregion.parse(i).as_imagecoord(self.fits.header)
-                x,y,w,h,a = self.parse_ellipse(r)
-                
-                ell = Ellipse(xy=(x,y),width=w,height=h,angle=a,color='green',linewidth=1.0,fill=None,zorder=50)
-                self.ax.add_patch(ell)
+                r[0].attr[1]['color'] = 'green'
+                patch_list, artist_list = r.get_mpl_patches_texts()
+
+                # ax is a mpl Axes object
+                for p in patch_list:
+                    self.ax.add_patch(p)
+                for t in artist_list:
+                    self.ax.add_artist(t)
+
+
             except ValueError:
                 print 'Failed for now'
        
