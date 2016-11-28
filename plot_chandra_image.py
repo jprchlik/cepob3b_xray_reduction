@@ -145,6 +145,7 @@ class format_image:
             try:
                 r = pyregion.parse(i).as_imagecoord(self.fits.header)
                 r[0].attr[1]['color'] = 'green'
+                
                 self.add_patches(r)
             except ValueError:
                 print 'Failed for now'
@@ -159,13 +160,13 @@ class format_image:
             m[3] = float(m[3])*2.
 #create region with double width and height 
             n = 'Ellipse({0},{1},{2:6.5f},{3:6.5f},{4})'.format(m[0],m[1],m[2],m[3],m[4])
-#add reject region 
-            self.starreg_coor[j,:] = np.array([float(m[0]),float(m[1]),m[2],m[3],float(m[4])])
             r = pyregion.parse(n).as_imagecoord(self.fits.header)
             
             r[0].attr[1]['color'] = 'red'
 #add reject regions to plots
             self.add_patches(r)
+#add reject region 
+            self.starreg_coor[j,:] = np.array(r[0].coord_list)
   
 
     def plot_backreg(self):
