@@ -29,13 +29,13 @@ class format_image:
         yvals = (y-self.fits.header['CRPIX2'])*self.fits.header['CDELT2']+self.fits.header['CRVAL2']
         return xvals,yvals
 
-    def convert_exy(self,x,y):
-#from http://cxc.harvard.edu/ciao/threads/regions/
-#DOES NOT WORK
-        xvals = (187.2768)+np.tan((-0.000136667)*(x-(self.fits.header['CRVAL1P'])))
-        yvals = (+2.0542 )+np.tan((+0.000136667)*(y-(self.fits.header['CRVAL2P'])))
-
-        return xvals,yvals
+#    def convert_exy(self,x,y):
+##from http://cxc.harvard.edu/ciao/threads/regions/
+##DOES NOT WORK
+#        xvals = (187.2768)+np.tan((-0.000136667)*(x-(self.fits.header['CRVAL1P'])))
+#        yvals = (+2.0542 )+np.tan((+0.000136667)*(y-(self.fits.header['CRVAL2P'])))
+#
+#        return xvals,yvals
 
 
 
@@ -54,7 +54,7 @@ class format_image:
 
     
 #Plot new figure
-    def make_plot(self,figsize=(8,8),dpi=200,cmap=plt.cm.gray,starreg=False,backreg=False):
+    def make_plot(self,figsize=(8,8),dpi=200,cmap=plt.cm.gray,starreg=False,backreg=False,writreg=False):
        self.dpi = dpi
        self.figsize = figsize
 
@@ -73,6 +73,8 @@ class format_image:
            self.plot_starreg()
        if backreg:
            self.plot_backreg()
+       if writreg:
+           self.write_reg()
 
        self.ax.set_xlabel('RA')
        self.ax.set_ylabel('Dec')
@@ -86,15 +88,32 @@ class format_image:
         a   = float(fstr[4])
         return x,y,np.abs(w),np.abs(h),a
 
+#write in registract background regions with sources excluded
+    def write_reg(self):
+        import matplotlib.path as mplPath
+        for i in self.backreg:
+            try:
+                if i.name == 'polygon':
+                    c = i.coord_list 
+                    bbPath = mplPath.Path(np.array([[c[0],c[1]],
+                                          [c[2],c[3]],
+                                          [c[4],c[5]],
+                                          [c[6],c[7]]]))
+                    print bbPath.contains_points(self.starreg_coor[:,:2])
+                                          
+#find ASCI-I regions
+#                print i.attr[1]['text']
+#                if i.attr[1]['text'][0] == 'I':
+#                    print i.attr[1]['text'],i.coord_list,i.name
+            except KeyError:
+                continue
+    
 
     def rot_data(self,p,rotation):
         t_start = self.ax.transData
         t = mpl.transforms.Affine2D().rotate_deg(rotation)
         t_end = t_start + t
-        
-        print dir(p)
         p.set_transformation(t_end)
-        print 'HEERRRE'
 
         return p 
 
@@ -119,13 +138,14 @@ class format_image:
 #plot source regions
     def plot_starreg(self):
         regs = np.loadtxt(self.sdir+'sources/wav.src.reg',dtype='str')
-        for i in regs:
+        self.starreg = regs
+#add to check whether coords are region
+        self.starreg_coor = np.zeros((regs.size,5))-9999.9
+        for j,i in enumerate(regs):
             try:
                 r = pyregion.parse(i).as_imagecoord(self.fits.header)
                 r[0].attr[1]['color'] = 'green'
- 
                 self.add_patches(r)
-
             except ValueError:
                 print 'Failed for now'
                 i = i.split('&')[0]
@@ -137,11 +157,14 @@ class format_image:
             m = i.replace('Ellipse(','').replace(')','').split(',')
             m[2] = float(m[2])*2.
             m[3] = float(m[3])*2.
-#crate region with double width and height 
+#create region with double width and height 
             n = 'Ellipse({0},{1},{2:6.5f},{3:6.5f},{4})'.format(m[0],m[1],m[2],m[3],m[4])
+#add reject region 
+            self.starreg_coor[j,:] = np.array([float(m[0]),float(m[1]),m[2],m[3],float(m[4])])
             r = pyregion.parse(n).as_imagecoord(self.fits.header)
             
             r[0].attr[1]['color'] = 'red'
+#add reject regions to plots
             self.add_patches(r)
   
 
@@ -149,11 +172,12 @@ class format_image:
 #Doesn't work for now
 #        asciir = 'ascii_default.reg'
 #        r = pyregion.open(asciir).as_imagecoord(self.fits.header)
-#   
 #        self.add_patches(r,rotation=self.fits.header['ROLL_PNT'])
+
         asciir = self.sdir+'boxes_e{0:5d}_asci.reg'.format(self.epoch).replace(' ','0')
         r = pyregion.open(asciir).as_imagecoord(self.fits.header)
-        print r
+
+        self.backreg = r
         self.add_patches(r)
 
 #Save figure
