@@ -21,6 +21,8 @@ class format_image:
         self.scale = scale
         self.vmin = vmin
         self.vmax = vmax
+# format for add exclusion regions in background
+        self.outreg = '&!Ellipse({0:6.2f},{1:6.2f},{2:6.4f},{3:6.4f},{4:3.3f})'
 
         self.fits = pyfits.open(self.fname)[0]
 
@@ -91,15 +93,28 @@ class format_image:
 #write in registract background regions with sources excluded
     def write_reg(self):
         import matplotlib.path as mplPath
+#counter for regions
+        f = 1
         for i in self.backreg:
             try:
                 if i.name == 'polygon':
+                    outfile = open(self.sdir+'sources/e{0:5d}_background_I{1:1d}.reg'.format(self.epoch,f).replace(' ','0'),'w')
                     c = i.coord_list 
                     bbPath = mplPath.Path(np.array([[c[0],c[1]],
                                           [c[2],c[3]],
                                           [c[4],c[5]],
                                           [c[6],c[7]]]))
-                    print bbPath.contains_points(self.starreg_coor[:,:2])
+                    inbox, = np.where(bbPath.contains_points(self.starreg_coor[:,:2]))
+#start with the Polygon
+                    polyfmt = 'polygon({0:8.4f},{1:8.4f},{2:8.4f},{3:8.4f},{4:8.4f},{5:8.4f},{6:8.4f},{7:8.4f})'
+                    outfile.write(polyfmt.format(c[0],c[1],c[2],c[3],c[4],c[5],c[6],c[7]))
+#write all exclusion regions to file
+                    for k in inbox:
+                        ta = self.starreg_coor[k,:]
+                        outfile.write(self.outreg.format(ta[0],ta[1],ta[2],ta[3],ta[4]))
+                    outfile.close()
+#increase counter for regions              
+                    f += 1
                                           
 #find ASCI-I regions
 #                print i.attr[1]['text']
