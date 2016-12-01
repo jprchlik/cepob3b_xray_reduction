@@ -57,7 +57,7 @@ for i,j in enumerate(dirs):
             #instrument response on the source
 #            rmf = get_rmf()
 #            umod = xsconstant.c*xspowerlaw.p1*xsgaussian.g1
-            umod = xspowerlaw.p1*xsconstant.c+xsgaussian.g1+xsgaussian.g2#xsgaussian.g3+xsgaussian.g4+xsgaussian.g5+xswabs.a1*xsvapec.b1
+            umod = xsgaussian.g1+xsgaussian.g2+xswabs.a1*xsvapec.b1+xswabs.a1*xspowerlaw.p1*xsconstant.c#xsgaussian.g3+xsgaussian.g4+xsgaussian.g5
 
             a1.nH = 0.02
             a1.nH.min = 0.0001
@@ -65,7 +65,7 @@ for i,j in enumerate(dirs):
 
             b1.kT = 0.18
             b1.kT.min = 0.10
-            b1.kT.max = 0.19
+            b1.kT.max = 0.40
 
             c.factor = 0.00000000001
 
@@ -150,7 +150,7 @@ for i,j in enumerate(dirs):
             get_data_plot_prefs()["ylog"] = True
             plot_fit()
             #best fit values absorbed values
-            k = raw_input('Press Enter to Continue')
+#            k = raw_input('Press Enter to Continue')
 #    except:
 #        print 'ERROR'
 #            g1.LineE=7.4
@@ -162,16 +162,16 @@ for i,j in enumerate(dirs):
 #            g1.norm=3.
 
             #assume an initial extinction
-            set_source(umod)
+#            set_source(umod)
 #model for background
             #guess initial model and fit
 #            guess(a1)
 #            guess(b1)
 #set the maximum and minimum range to fit
-            notice(mine,maxe)
+#            notice(mine,maxe)
 #do the fit
 #            group_counts(10)
-            fit()
+#            fit()
             ####calc_stat_info()
 #            proj()
 #            get_proj()
@@ -189,9 +189,9 @@ for i,j in enumerate(dirs):
 #            plt['size'] = 20
 #            plt["title"] = "unabs kT = {0:4.2f} keV, nH = {1:4.2f}, chi = {2:4.3f}".format(ukt,unh,uchi)
 #            plt['color'] = 'blue'
-            get_data_plot_prefs()["xlog"] = True
-            get_data_plot_prefs()["ylog"] = True
-            plot_fit()
+#            get_data_plot_prefs()["xlog"] = True
+#            get_data_plot_prefs()["ylog"] = True
+#            plot_fit()
             #best fit values absorbed values
             k = raw_input('Press Enter to Continue')
 #    except:
