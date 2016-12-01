@@ -18,6 +18,7 @@
 	pset fluximage bands=0.5:8.0:1.7
 	pset fluximage verbose=1
 	pset fluximage cleanup=no
+        pset fluximage clobber=yes
 	fluximage
 #	punlearn fluximage
 #	pset fluximage infile=10810/repro/acisf10810_repro_evt2.fits
