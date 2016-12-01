@@ -22,7 +22,7 @@ class format_image:
         self.vmin = vmin
         self.vmax = vmax
 # format for add exclusion regions in background
-        self.outreg = '&!Ellipse({0:6.2f},{1:6.2f},{2:6.4f},{3:6.4f},{4:3.3f})'
+        self.outreg = '\r-Ellipse({0:6.2f},{1:6.2f},{2:6.4f},{3:6.4f},{4:3.3f})'
 
         self.fits = pyfits.open(self.fname)[0]
 
@@ -107,11 +107,11 @@ class format_image:
                     inbox, = np.where(bbPath.contains_points(self.starreg_coor[:,:2]))
 #start with the Polygon
                     polyfmt = 'polygon({0:8.4f},{1:8.4f},{2:8.4f},{3:8.4f},{4:8.4f},{5:8.4f},{6:8.4f},{7:8.4f})'
-                    outfile.write(polyfmt.format(c[0],c[1],c[2],c[3],c[4],c[5],c[6],c[7]))
+                    outfile.write(polyfmt.format(c[0],c[1],c[2],c[3],c[4],c[5],c[6],c[7]).replace(' ',''))
 #write all exclusion regions to file
                     for k in inbox:
                         ta = self.starreg_coor[k,:]
-                        outfile.write(self.outreg.format(ta[0],ta[1],ta[2],ta[3],ta[4]))
+                        outfile.write(self.outreg.format(ta[0],ta[1],ta[2],ta[3],ta[4]).replace(' ',''))
                     outfile.close()
 #increase counter for regions              
                     f += 1
