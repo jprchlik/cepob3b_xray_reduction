@@ -128,7 +128,7 @@ for i,j in enumerate(dirs):
             notice(mine,maxe)
 #do the fit
 #            group_counts(10)
-            fit()
+#            fit()
             ####calc_stat_info()
 #            proj()
 #            get_proj()
@@ -148,9 +148,14 @@ for i,j in enumerate(dirs):
 #            plt['color'] = 'blue'
             get_data_plot_prefs()["xlog"] = True
             get_data_plot_prefs()["ylog"] = True
-            plot_fit()
+#            plot_fit()
             #best fit values absorbed values
 #            k = raw_input('Press Enter to Continue')
+            colors = ['red','blue','green','purple']
+            for p in range(3):
+                load_pha(p+4,"{0:4d}/background/e{0:5d}_I{1:1d}.fits.pi".format(int(j),p+1).replace(' ','0'))
+                plot_data(id=p+4,overplot=True)
+                get_data_plot_prefs()['symbolcolor'] = colors[p]
 #    except:
 #        print 'ERROR'
 #            g1.LineE=7.4
