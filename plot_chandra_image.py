@@ -22,13 +22,13 @@ class format_image:
         self.vmin = vmin
         self.vmax = vmax
 # format for add exclusion regions in background
-        self.outreg = '\r-Ellipse({0:6.2f},{1:6.2f},{2:6.4f},{3:6.4f},{4:3.3f})'
+        self.outreg = '\n-Ellipse({0:6.2f},{1:6.2f},{2:6.4f},{3:6.4f},{4:3.3f})'
 
         self.fits = pyfits.open(self.fname)[0]
-
+#convert to physical coordinates
     def convert_pxy(self,x,y):
-        xvals = (x-self.fits.header['CRPIX1'])*self.fits.header['CDELT1']+self.fits.header['CRVAL1']
-        yvals = (y-self.fits.header['CRPIX2'])*self.fits.header['CDELT2']+self.fits.header['CRVAL2']
+        xvals = (x-self.fits.header['CRPIX1P'])*self.fits.header['CDELT1P']+self.fits.header['CRVAL1P']
+        yvals = (y-self.fits.header['CRPIX2P'])*self.fits.header['CDELT2P']+self.fits.header['CRVAL2P']
         return xvals,yvals
 
 #    def convert_exy(self,x,y):
@@ -95,11 +95,13 @@ class format_image:
         import matplotlib.path as mplPath
 #counter for regions
         f = 1
-        for i in self.backreg:
+        for j,i in enumerate(self.backreg):
             try:
                 if i.name == 'polygon':
                     outfile = open(self.sdir+'sources/e{0:5d}_background_I{1:1d}.reg'.format(self.epoch,f).replace(' ','0'),'w')
                     c = i.coord_list 
+#in physical coordinates
+                    xvals,yvals = self.convert_pxy(np.array(c[::2]),np.array(c[1::2]))
                     bbPath = mplPath.Path(np.array([[c[0],c[1]],
                                           [c[2],c[3]],
                                           [c[4],c[5]],
@@ -107,10 +109,11 @@ class format_image:
                     inbox, = np.where(bbPath.contains_points(self.starreg_coor[:,:2]))
 #start with the Polygon
                     polyfmt = 'polygon({0:8.4f},{1:8.4f},{2:8.4f},{3:8.4f},{4:8.4f},{5:8.4f},{6:8.4f},{7:8.4f})'
-                    outfile.write(polyfmt.format(c[0],c[1],c[2],c[3],c[4],c[5],c[6],c[7]).replace(' ',''))
+                    outfile.write(polyfmt.format(xvals[0],yvals[0],xvals[1],yvals[1],xvals[2],yvals[2],xvals[3],yvals[3]).replace(' ',''))
 #write all exclusion regions to file
                     for k in inbox:
-                        ta = self.starreg_coor[k,:]
+#write out in physical cooridnates
+                        ta = self.starreg_phys[k,:]
                         outfile.write(self.outreg.format(ta[0],ta[1],ta[2],ta[3],ta[4]).replace(' ',''))
                     outfile.close()
 #increase counter for regions              
@@ -155,11 +158,17 @@ class format_image:
         regs = np.loadtxt(self.sdir+'sources/wav.src.reg',dtype='str')
         self.starreg = regs
 #add to check whether coords are region
+#add reject region in image    coordinates
         self.starreg_coor = np.zeros((regs.size,5))-9999.9
+#add reject region in physical coordinates
+        self.starreg_phys = np.zeros((regs.size,5))-9999.9
         for j,i in enumerate(regs):
             try:
                 r = pyregion.parse(i).as_imagecoord(self.fits.header)
                 r[0].attr[1]['color'] = 'green'
+#output in physical cooridinates
+#                i = i.replace('Ellipse(','').replace(')','')
+#                p = np.array(i.split(',')).astype('float')
                 
                 self.add_patches(r)
             except ValueError:
@@ -167,6 +176,9 @@ class format_image:
                 i = i.split('&')[0]
                 r = pyregion.parse(i).as_imagecoord(self.fits.header)
                 r[0].attr[1]['color'] = 'teal'
+#output in physical cooridnates
+#                i = i.replace('Ellipse(','').replace(')','')
+#                p = np.array(i.split(',')).astype('float')
                 self.add_patches(r)
  
 #create an exclusion region
@@ -175,13 +187,18 @@ class format_image:
             m[3] = float(m[3])*2.
 #create region with double width and height 
             n = 'Ellipse({0},{1},{2:6.5f},{3:6.5f},{4})'.format(m[0],m[1],m[2],m[3],m[4])
+#in image coordinates
             r = pyregion.parse(n).as_imagecoord(self.fits.header)
+#in image physical coordinates
+            p = pyregion.parse(n)
             
             r[0].attr[1]['color'] = 'red'
 #add reject regions to plots
             self.add_patches(r)
-#add reject region 
+#add reject region in image coordinates
             self.starreg_coor[j,:] = np.array(r[0].coord_list)
+#add reject region in physical coordinates
+            self.starreg_phys[j,:] = np.array(p[0].coord_list)
   
 
     def plot_backreg(self):
@@ -191,9 +208,15 @@ class format_image:
 #        self.add_patches(r,rotation=self.fits.header['ROLL_PNT'])
 
         asciir = self.sdir+'boxes_e{0:5d}_asci.reg'.format(self.epoch).replace(' ','0')
+#in image coordinates
         r = pyregion.open(asciir).as_imagecoord(self.fits.header)
+#in image physical coordinates
+        p = pyregion.open(asciir)
 
+#in image coordinates
         self.backreg = r
+#in image physical coordinates
+        self.backimg = p
         self.add_patches(r)
 
 #Save figure
