@@ -13,8 +13,8 @@ diri = '/srcflux_output/'
 #dirs = ['9919']
 #dirs = ['10809']
 
-mine = 0.3
-maxe = 8.0
+mine = 0.5
+maxe = 3.0
 AvnH = 1.69*10**21
 Av = 2.5
 get_data_plot_prefs()["xlog"] = True
@@ -57,7 +57,7 @@ def main(argv):
 
 
 #    files = files[:1]
-    outf = open(i+'/prelim_out_{1}_{0:5d}.dat'.format(int(i),stat).replace(' ','0'),'w')
+    outf = open(i+'/prelim_out_{1}_{0:5d}_3keV.dat'.format(int(i),stat).replace(' ','0'),'w')
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat'))
     for j in np.arange(1,len(files)+1):
 #    for j in np.arange(1,10):
