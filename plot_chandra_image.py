@@ -7,7 +7,7 @@ from matplotlib.patches import Ellipse
 import pyregion
 from astropy.wcs import WCS
 from wcsaxes import WCSAxes
-
+import subprocess
 
 class format_image:
 
@@ -98,7 +98,7 @@ class format_image:
         for j,i in enumerate(self.backreg):
             try:
                 if i.name == 'polygon':
-                    outfile = open(self.sdir+'sources/e{0:5d}_background_I{1:1d}.reg'.format(self.epoch,f).replace(' ','0'),'w')
+                    outfile = open(self.sdir+'sources/e{0:5d}_background_I{1:2d}.reg'.format(self.epoch,f).replace(' ','0'),'w')
                     c = i.coord_list 
 #in physical coordinates
                     xvals,yvals = self.convert_pxy(np.array(c[::2]),np.array(c[1::2]))
@@ -199,6 +199,26 @@ class format_image:
             self.starreg_coor[j,:] = np.array(r[0].coord_list)
 #add reject region in physical coordinates
             self.starreg_phys[j,:] = np.array(p[0].coord_list)
+
+    def run_extraction(self):
+        
+        self.extract_fmt = '\n/home/jakub/ciao-4.8/contrib/bin/specextractZZZZ"{0:4d}/repro/acisf{0:5d}_repro_evt2.fits[(x,y)=region({0:4d}/sources/e{0:5d}_background_I{1:2d}.reg)]"ZZZZ"{0:4d}/background/e{0:5d}_{1:2d}"'
+        self.write_extract()
+     
+        
+
+
+    def write_extract(self):
+        extfile = open('run_backextract_e{0:5d}.bash'.format(self.epoch).replace(' ','0'),'w')
+
+        extfile.write('/home/jakub/ciao-4.8/bin/ciao.bash')
+        for j in range(1,5):
+            extfile.write(self.extract_fmt.format(self.epoch,j).replace(' ','0').replace('ZZZZ',' '))
+        extfile.close()
+        execat = subprocess.call(['/bin/bash','-c','chmod a+x {0}'.format(extfile.name)])
+        #run extraction script
+        exeext = subprocess.call(['/bin/bash','-c','./{0}'.format(extfile.name)])
+       
   
 
     def plot_backreg(self):
