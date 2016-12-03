@@ -12,10 +12,12 @@ import subprocess
 class format_image:
 
 #initialize stuff to format image
-    def __init__(self,epoch,vmin=0.8,vmax=100.,scale='log',pipeline=False):
+    def __init__(self,epoch,vmin=0.8,vmax=100.,scale='log',pipeline=False,plot_sources=False):
 
         self.sdir = '{0:4d}/'.format(epoch)
         self.epoch = epoch
+#draw circles around sources
+        self.plot_sources = plot_sources
       
 #epoch broken up by eastern and western subclusters
         self.region_dict = {}
@@ -185,7 +187,9 @@ class format_image:
 #                i = i.replace('Ellipse(','').replace(')','')
 #                p = np.array(i.split(',')).astype('float')
                 
-                self.add_patches(r)
+#include green sources circles
+                if self.plot_sources:
+                    self.add_patches(r)
             except ValueError:
                 print 'Failed for now'
                 i = i.split('&')[0]
@@ -194,7 +198,9 @@ class format_image:
 #output in physical cooridnates
 #                i = i.replace('Ellipse(','').replace(')','')
 #                p = np.array(i.split(',')).astype('float')
-                self.add_patches(r)
+#include green sources circles
+                if self.plot_sources:
+                    self.add_patches(r)
  
 #create an exclusion region
             m = i.replace('Ellipse(','').replace(')','').split(',')
@@ -218,7 +224,7 @@ class format_image:
 #Run background extraction
     def run_extraction(self):
         
-        self.extract_fmt = '\n/home/jakub/ciao-4.8/contrib/bin/specextractZZZZ"{0:4d}/repro/acisf{0:5d}_repro_evt2.fits[(x,y)=region({0:4d}/sources/e{0:5d}_background_I{1:2d}.reg)]"ZZZZ"{0:4d}/background/e{0:5d}_{1:2d}"'
+        self.extract_fmt = '\n/home/jakub/ciao-4.8/contrib/bin/specextractZZZZ-mod=hZZZZ"{0:4d}/repro/acisf{0:5d}_repro_evt2.fits[(x,y)=region({0:4d}/sources/e{0:5d}_background_I{1:2d}.reg)]"ZZZZ"{0:4d}/background/e{0:5d}_{1:2d}"'
         self.write_extract()
      
         
