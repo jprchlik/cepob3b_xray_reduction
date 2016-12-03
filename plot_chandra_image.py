@@ -12,10 +12,21 @@ import subprocess
 class format_image:
 
 #initialize stuff to format image
-    def __init__(self,epoch,vmin=0.8,vmax=100.,scale='log'):
+    def __init__(self,epoch,vmin=0.8,vmax=100.,scale='log',pipeline=False):
 
         self.sdir = '{0:4d}/'.format(epoch)
         self.epoch = epoch
+      
+#epoch broken up by eastern and western subclusters
+        self.region_dict = {}
+        self.region_dict['9919'] = 'west'
+        self.region_dict['10811'] = 'west'
+        self.region_dict['10812'] = 'west'
+        self.region_dict['9920'] = 'east'
+        self.region_dict['10809'] = 'east'
+        self.region_dict['10810'] = 'east'
+#use sources in a given epoch or region
+        self.pipeline = pipeline
       
         self.fname = self.sdir+'obs{0:4d}_img.fits'.format(epoch)
         self.scale = scale
@@ -155,7 +166,11 @@ class format_image:
 
 #plot source regions
     def plot_starreg(self):
-        regs = np.loadtxt(self.sdir+'sources/wav.src.reg',dtype='str')
+#if pipeline then only exclude sources which are found in a given image
+        if self.pipeline:
+            regs = np.loadtxt(self.sdir+'sources/wav.src.reg',dtype='str')
+        else:
+            regs = np.loadtxt('background_regions/{0}_sources.reg'.format(self.region_dict[str(self.epoch)]),dtype='str')
         self.starreg = regs
 #add to check whether coords are region
 #add reject region in image    coordinates
@@ -200,6 +215,7 @@ class format_image:
 #add reject region in physical coordinates
             self.starreg_phys[j,:] = np.array(p[0].coord_list)
 
+#Run background extraction
     def run_extraction(self):
         
         self.extract_fmt = '\n/home/jakub/ciao-4.8/contrib/bin/specextractZZZZ"{0:4d}/repro/acisf{0:5d}_repro_evt2.fits[(x,y)=region({0:4d}/sources/e{0:5d}_background_I{1:2d}.reg)]"ZZZZ"{0:4d}/background/e{0:5d}_{1:2d}"'
@@ -207,7 +223,7 @@ class format_image:
      
         
 
-
+#write extract to file
     def write_extract(self):
         extfile = open('run_backextract_e{0:5d}.bash'.format(self.epoch).replace(' ','0'),'w')
 
@@ -221,6 +237,7 @@ class format_image:
        
   
 
+#over plot background regions
     def plot_backreg(self):
 #Doesn't work for now
 #        asciir = 'ascii_default.reg'
