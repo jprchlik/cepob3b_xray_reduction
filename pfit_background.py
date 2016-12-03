@@ -2,6 +2,7 @@ import numpy as np
 from sherpa.astro.ui import *
 #from sherpa.astro.chips import *
 from sherpa.plot.chips_backend import *
+from sherpa_contrib.profiles import *
 from sherpa.astro.utils import _charge_e as q # ~1.6e-9 ergs/1 keV photon (nist.gov)
 import glob
 import sys
@@ -146,16 +147,22 @@ for i,j in enumerate(dirs):
 #            plt['size'] = 20
 #            plt["title"] = "unabs kT = {0:4.2f} keV, nH = {1:4.2f}, chi = {2:4.3f}".format(ukt,unh,uchi)
 #            plt['color'] = 'blue'
+#            plot_fit()
             get_data_plot_prefs()["xlog"] = True
             get_data_plot_prefs()["ylog"] = True
-#            plot_fit()
+            get_data_plot_prefs()['symbolcolor'] = 'white'
+            get_data_plot_prefs()['errcolor'] = 'white'
+            plot_data(1,overplot=False)
             #best fit values absorbed values
 #            k = raw_input('Press Enter to Continue')
-            colors = ['red','blue','green','purple']
-            for p in range(3):
+            colors = ['red','blue','green','orange']
+            for p in range(4):
                 load_pha(p+4,"{0:4d}/background/e{0:5d}_I{1:1d}.fits.pi".format(int(j),p+1).replace(' ','0'))
-                plot_data(id=p+4,overplot=True)
+                notice(mine,maxe)
                 get_data_plot_prefs()['symbolcolor'] = colors[p]
+                get_data_plot_prefs()['errcolor'] = colors[p]
+                plot_data(id=p+4,overplot=True)
+
 #    except:
 #        print 'ERROR'
 #            g1.LineE=7.4
