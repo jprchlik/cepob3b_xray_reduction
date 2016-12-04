@@ -235,7 +235,7 @@ class format_image:
 
         extfile.write('/home/jakub/ciao-4.8/bin/ciao.bash')
         for j in range(1,5):
-            extfile.write("\nrm {0:4d}/background/*")
+            extfile.write("\nrm {0:4d}/background/*".format(self.epoch))
             extfile.write("\npunlearn specextract")
             extfile.write('\npsetZZZZspecextractZZZZ"infile={0:4d}/repro/acisf{0:5d}_repro_evt2.fits[(x,y)=region({0:4d}/sources/e{0:5d}_background_I{1:2d}.reg)]"'.format(self.epoch,j).replace(' ','0').replace('ZZZZ',' '))
             extfile.write('\npsetZZZZspecextractZZZZoutroot="{0:4d}/background/e{0:5d}_I{1:2d}"'.format(self.epoch,j).replace(' ','0').replace('ZZZZ',' '))
