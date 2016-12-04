@@ -5,7 +5,7 @@ from sherpa.plot.chips_backend import *
 from sherpa_contrib.profiles import *
 from sherpa.astro.utils import _charge_e as q # ~1.6e-9 ergs/1 keV photon (nist.gov)
 import glob
-import sys
+import sys 
 import getopt
 
 
@@ -51,7 +51,8 @@ for i,j in enumerate(dirs):
 
  #   try:
             diri = dirs[i]
-            exam = '/summed_background_{0}_src'.format(j).replace(' ','0')
+#            exam = '/summed_background_{0}_src'.format(j).replace(' ','0')
+            exam = '/background/summed_background_{0}_src'.format(j).replace(' ','0')
             sfile = diri+exam
             #un#subtracted source spectrum
             load_pha(sfile+".pi")
@@ -157,7 +158,7 @@ for i,j in enumerate(dirs):
 #            k = raw_input('Press Enter to Continue')
             colors = ['red','blue','green','orange']
             for p in range(4):
-                load_pha(p+4,"{0:4d}/background/e{0:5d}_I{1:1d}.fits.pi".format(int(j),p+1).replace(' ','0'))
+                load_pha(p+4,"{0:4d}/background/e{0:5d}_I{1:2d}.pi".format(int(j),p+1).replace(' ','0'))
                 notice(mine,maxe)
                 get_data_plot_prefs()['symbolcolor'] = colors[p]
                 get_data_plot_prefs()['errcolor'] = colors[p]
