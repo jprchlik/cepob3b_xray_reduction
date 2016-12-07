@@ -20,7 +20,6 @@ Av = 2.5
 get_data_plot_prefs()["xlog"] = True
 get_data_plot_prefs()["ylog"] = True
 
-
 #for p,i in enumerate(dirs):
 def main(argv):
 #read in command line
@@ -80,7 +79,8 @@ def main(argv):
             rmf = get_rmf()
             arf = get_arf()
             bkg = get_bkg()
-            bkg_scale = get_bkg_scale()
+            bkg_scal = get_bkg_scale()
+            set_backscal(bkg_scal)
 #            notice_id(1,mine,maxe)
             if chid:
 #Skipping background subtraction for now
@@ -164,7 +164,9 @@ def main(argv):
 #            uchi = ugoodness[0].statval
 #            urst = ugoodness[0].rstat
             #Calculate Error for model using 100 samples
-            unabs = sample_flux(umod,mine,maxe,num=100)
+#            unabs = sample_flux(umod,mine,maxe,num=100)
+#Switch from total model to just xsraymond model because of Doug Burke (2016/12/07)
+            unabs = sample_flux(b1,mine,maxe,num=1000)
 	    #      save best fit model as fits file
             save_model(sfile+"_{0}_umod.pi".format(stat),ascii=False,clobber=True)
             save_data(sfile+"_{0}_data.pi".format(stat),ascii=False,clobber=True)
@@ -178,16 +180,16 @@ def main(argv):
             
 
             
-            #Winston 2010 used xsraymond
-            amod = xsvapec.b1
-            set_stat(stat) 
-            set_source(amod)
-            b1.cache=0
-            b1.kT = 1.5 #kT
-            b1.kT.max = 50.
-            b1.kT.min = 0.01
-            #guess initial model and fit
-            guess(b1)
+###            #Winston 2010 used xsraymond
+###            amod = xsvapec.b1
+###            set_stat(stat) 
+###            set_source(amod)
+###            b1.cache=0
+###            b1.kT = 1.5 #kT
+###            b1.kT.max = 50.
+###            b1.kT.min = 0.01
+###            #guess initial model and fit
+###            guess(b1)
 #setup model components from Brad Spitzerbar (constant,power law, and Gaussian)
 #            set_bkg_model(xsconstant.c*xspowerlaw.p1*xsgaussian*g1)
 ##freeze in previous backgroud parameters
@@ -198,34 +200,38 @@ def main(argv):
 #            freeze(g1.Sigma)
 #            freeze(g1.norm)
 
-            fit()
+####            fit()
             #plot the abs fit
 #            plot_fit(overplot=True)
             #change the abs fit color to blue
 #            set_curve("crv4",["*.color","blue"])
 #            #best fit values absorbed values
-            akt,anorm = get_fit_results().parvals
+#Commented out seperate unattenuated fit because of Doug Burke (2016/12/07)
+###            akt,anorm = get_fit_results().parvals
+###            anh = 0.0
+###            ####calc_stat_info()
+###            achi = get_fit_results().statval
+###            arst = get_fit_results().rstat
+            akt, anorm = -9999.9,-9999.9
             anh = 0.0
-            ####calc_stat_info()
-            achi = get_fit_results().statval
-            arst = get_fit_results().rstat
-            
-            
-            #Calculate Error for model using 100 samples
-            anabs = sample_flux(amod,mine,maxe,num=100)
-#      save best fit model as fits file
-            save_model(sfile+"_{0}_amod.pi".format(stat),ascii=False,clobber=True)
-#get the total fluxes and errors in a 3D vector 
-            anabs = anabs[1]
+            achi,arst = -9999.9,-9999.9
+###            
+###            
+###            #Calculate Error for model using 100 samples
+###            anabs = sample_flux(amod,mine,maxe,num=100)
+####      save best fit model as fits file
+###            save_model(sfile+"_{0}_amod.pi".format(stat),ascii=False,clobber=True)
+####get the total fluxes and errors in a 3D vector 
             unabs = unabs[1]
-#total array
+            anabs = anabs[0]
+####total array
             tot_a = anabs
             tot_u = unabs 
- 
-#get the average err abs[2] is a negative number
+### 
+####get the average err abs[2] is a negative number
             anabs_err = (anabs[1]-anabs[2])/2.
             unabs_err = (unabs[1]-unabs[2])/2. 
-#get the median fluxes
+####get the median fluxes
             anabs = anabs[0]
             unabs = unabs[0]
 
@@ -239,6 +245,7 @@ def main(argv):
         
        except:
 #########Write out -9999 if cannot find solution
+            print 'FAILED'
             outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
     outf.close()
 
