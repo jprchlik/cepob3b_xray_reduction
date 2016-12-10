@@ -56,11 +56,11 @@ def main(argv):
 
 
 #    files = files[:1]
-    outf = open(i+'/prelim_out_{1}_{0:5d}_3keV.dat'.format(int(i),stat).replace(' ','0'),'w')
+    outf = open(i+'/prelim_out_{1}_{0:5d}.dat'.format(int(i),stat).replace(' ','0'),'w')
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat'))
     for j in np.arange(1,len(files)+1):
 #    for j in np.arange(1,10):
-       try:
+#       try:
             exam = 'sers_{0:4d}'.format(j).replace(' ','0')
             
             
@@ -101,7 +101,10 @@ def main(argv):
             
             bkg_cnt_rate = calc_data_sum(bkg_id=1)/get_exposure(bkg_id=1) 
 
-            
+#paramter max values
+            psetmax = np.array([ 100., 50. ,9999.])
+            psetmin = np.array([ 1e-4, 0.01,-999.])
+            psetgus = np.array([ 0.02, 1.50,0.]   )
             
             
             #Winston 2010 used xsraymond
@@ -111,16 +114,16 @@ def main(argv):
             umod = xswabs.abs1*xsvapec.b1
             b1.cache=0
             b1.kT = 1.5 #kT
-            b1.kT.max = 50.
-            b1.kT.min = 0.01
+            b1.kT.min = psetmin[1]
+            b1.kT.max = psetmax[1]
 #            b1.norm = 2.1599743e+21 #cm
             
             #use a background model for the background
             #assume an initial extinction
             abs1.cache = 0
             abs1.nH = 0.02
-            abs1.nH.min = 1e-4
-            abs1.nH.max = 100
+            abs1.nH.min = psetmin[0]
+            abs1.nH.max = psetmax[0] 
 #            set_full_model(umod)
             thaw(abs1)
             set_source(umod)
@@ -174,7 +177,17 @@ def main(argv):
             conf()
             get_conf()
             perr_a = get_conf_results()
-            perr = (np.array(perr_a.parmaxes)-np.array(perr_a.parmins))/2.
+            pmaxs = np.array(perr_a.parmaxes)
+            pmins = np.array(perr_a.parmins)
+            gmaxs = [jj is None for jj in pmaxs]
+            gmins = [jj is None for jj in pmins]
+
+#replace none types with the limits
+            pmaxs[gmaxs] = psetmax[gmaxs]
+            pmins[gmins] = psetmin[gmins]
+
+            perr = (pmaxs-pmins)/2.
+        
             unHerr = perr[0]
             ukTerr = perr[1]
             
@@ -224,8 +237,6 @@ def main(argv):
 ####get the total fluxes and errors in a 3D vector 
             anabs = unabs[0]
             unabs = unabs[1]
-            print anabs
-            print unabs
 ####total array
             tot_a = anabs
             tot_u = unabs 
@@ -245,10 +256,9 @@ def main(argv):
         
             outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,j,ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr))
         
-       except:
+#       except:
 #########Write out -9999 if cannot find solution
-            print 'FAILED'
-            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
+#            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
     outf.close()
 
 if __name__ == "__main__":
