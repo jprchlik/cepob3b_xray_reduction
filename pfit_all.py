@@ -212,9 +212,9 @@ def main(argv):
 ###            ####calc_stat_info()
 ###            achi = get_fit_results().statval
 ###            arst = get_fit_results().rstat
-            akt, anorm = -9999.9,-9999.9
+            akt, anorm = -99.9,-99.9
             anh = 0.0
-            achi,arst = -9999.9,-9999.9
+            achi,arst = -99.9,-99.9
 ###            
 ###            
 ###            #Calculate Error for model using 100 samples
@@ -222,8 +222,10 @@ def main(argv):
 ####      save best fit model as fits file
 ###            save_model(sfile+"_{0}_amod.pi".format(stat),ascii=False,clobber=True)
 ####get the total fluxes and errors in a 3D vector 
+            anabs = unabs[0]
             unabs = unabs[1]
-            anabs = anabs[0]
+            print anabs
+            print unabs
 ####total array
             tot_a = anabs
             tot_u = unabs 
