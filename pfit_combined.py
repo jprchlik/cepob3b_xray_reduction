@@ -14,20 +14,21 @@ sys.path.append("/home/jakub/wandajune_home/MyModules")
 
 def set_sources(j,i,num):
     global chid
-    exam = 'sers_{0:4d}'.format(j).replace(' ','0')
+    print j,i,num
+    exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
     sfile = i+diri+exam
     #un#subtracted source spectrum
     load_pha(num,sfile+".pi")
     #background spectrum
-    load_bkg(num,i+"/background/summed_background_{0}_src.pi".format(i),num+20)
-    bkg = get_bkg()
-    bkg_scal = get_bkg_scale()
-    set_backscal(bkg_scal)
+    load_bkg(num,i+"/background/summed_background_{0}_src.pi".format(i))
+    bkg = get_bkg(num)
+    bkg_scal = get_bkg_scale(num)
+    set_backscal(num,bkg_scal)
     if chid:
 #Skipping background subtraction for now
-        subtract()
+        subtract(num)
 #group points in bins of at least 10
-        group_counts(8)
+        group_counts(num,8)
             
 
 
@@ -82,7 +83,7 @@ def main(argv):
 #Set stat to use in fitting
     set_stat(stat) 
 #array of epochs
-    epochs = np.array([9919,9920,10809,10810,10811,10812])
+    epochs = np.array(['9919','9920','10809','10810','10811','10812'])
 
 #    files = files[:1]
     outf = open('combined/prelim_out_{1}.dat'.format(i,stat).replace(' ','0'),'w')
