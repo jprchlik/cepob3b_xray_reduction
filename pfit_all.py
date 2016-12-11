@@ -1,7 +1,6 @@
 import numpy as np
 from sherpa.astro.ui import *
-#CHIPS plotting
-#from pychips import *
+#CHIPS plotting #from pychips import *
 from sherpa.astro.utils import _charge_e as q # ~1.6e-9 ergs/1 keV photon (nist.gov)
 import glob
 import sys
@@ -150,12 +149,16 @@ def main(argv):
             perr_a = get_conf_results()
             pmaxs = np.array(perr_a.parmaxes)
             pmins = np.array(perr_a.parmins)
-            gmaxs = [jj is None for jj in pmaxs]
-            gmins = [jj is None for jj in pmins]
+            gmaxs, = np.where([jj is None for jj in pmaxs])
+            gmins, = np.where([jj is None for jj in pmins])
+
 
 #replace none types with the limits
-            pmaxs[gmaxs] = psetmax[gmaxs]
-            pmins[gmins] = psetmin[gmins]
+            if gmaxs.size >= 1:
+                pmaxs[gmaxs] = psetmax[gmaxs]
+            if gmins.size >= 1:
+                pmins[gmins] = psetmin[gmins]
+
 
             perr = (pmaxs-pmins)/2.
         
