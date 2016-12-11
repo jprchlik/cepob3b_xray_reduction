@@ -99,12 +99,18 @@ def main(argv):
             fids, = np.where(idlist > 0)
             num = np.arange(fids.size)
 
+#source string
+            scrstr = ''
 #set up sources and ids
             if fids.size > 1:
                 for jj in num:
                    set_sources(idlist[fids][jj],epochs[fids][jj],num[jj])
+                   scrstr = scrstr+','+str(num[jj])
             else:
-                set_sources(idlist[fids],epochs[fids],num)
+                set_sources(idlist[fids][0],epochs[fids][0],num[0])
+                scrstr = ','+str(num[0])
+#remove leading ,
+            scrstr = scrstr[1:]
 
            #old worthless stuff that remains for convience 
             data_sum = calc_data_sum(mine,maxe)  
@@ -139,8 +145,21 @@ def main(argv):
 #set the maximum and minimum range to fit
             notice(mine,maxe)
 
-#fit the model
-            fit(num)
+#fit the model using a string seperated by commas
+
+            if fids.size == 3:
+                fit(0,1,2,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+            elif fids.size == 2:
+                fit(0,1,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+            elif fids.size == 1:
+                fit(0,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+            elif fids.size == 4:
+                fit(0,1,2,3,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+            elif fids.size == 5:
+                fit(0,1,2,3,4,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+            elif fids.size == 6:
+                fit(0,1,2,3,4,5,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+            print 'HERE'
 
 #         plot the unabs fit
 #            plot_fit()
@@ -152,6 +171,8 @@ def main(argv):
 #Switch from total model to just xsraymond model because of Doug Burke (2016/12/07)
             unabs = sample_flux(b1,mine,maxe,num=1,numcores=3)
 	    #      save best fit model as fits file
+            exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
+            sfile = 'combined'+diri+exam
             save_model(sfile+"_{0}_umod.pi".format(stat),ascii=False,clobber=True)
             save_data(sfile+"_{0}_data.pi".format(stat),ascii=False,clobber=True)
 #get 1sigma errors of parameters
@@ -162,6 +183,9 @@ def main(argv):
             pmins = np.array(perr_a.parmins)
             gmaxs = [jj is None for jj in pmaxs]
             gmins = [jj is None for jj in pmins]
+
+            print pmaxs,gmaxs
+            print pmins,gmins
 
 #replace none types with the limits
             pmaxs[gmaxs] = psetmax[gmaxs]
@@ -201,11 +225,14 @@ def main(argv):
             tot_c_err = 0.0
 #write output to file
         
-            outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,j,ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr))
+            outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,int(j),ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr))
         
+            clean()
 #       except:
 #########Write out -9999 if cannot find solution
 #            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
+
+#remove all trailing information
     outf.close()
 
 if __name__ == "__main__":
