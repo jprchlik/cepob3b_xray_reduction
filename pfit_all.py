@@ -40,6 +40,8 @@ def main(argv):
             sys.exit()
         elif opt in ('-o','--obsid'):
             i = arg
+#all for fitting of the same source across epochs
+            if i == 'all': multifit = True
         elif opt in ('-c','--chidvar'):
             chid = True
             stat = 'chi2datavar'
@@ -138,7 +140,7 @@ def main(argv):
             uchi = get_fit_results().statval
             urst = get_fit_results().rstat
 #Switch from total model to just xsraymond model because of Doug Burke (2016/12/07)
-            unabs = sample_flux(b1,mine,maxe,num=1000)
+            unabs = sample_flux(b1,mine,maxe,num=1000,numcores=3)
 	    #      save best fit model as fits file
             save_model(sfile+"_{0}_umod.pi".format(stat),ascii=False,clobber=True)
             save_data(sfile+"_{0}_data.pi".format(stat),ascii=False,clobber=True)
