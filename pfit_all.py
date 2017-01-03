@@ -83,8 +83,11 @@ def main(argv):
             bkg_scal = get_bkg_scale()
             set_backscal(bkg_scal)
             #Fix background scaling of rmf and arf when fitting (2017/01/02 J. Prchlik)
-            load_bkg_arf()
-            load_bkg_rmf()
+            load_bkg_arf(arf.name)
+            load_bkg_rmf(rmf.name)
+            barf = get_bkg_arf()
+            brmf = get_bkg_rmf()
+            print brmf.name
             
 #            notice_id(1,mine,maxe)
             if chid:
