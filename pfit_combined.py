@@ -11,6 +11,14 @@ sys.path.append("/home/jakub/anaconda")
 sys.path.append("/home/jakub/wandajune_home/MyModules")
 
 
+#700 pc in cm
+dis = 2.16e21
+nH=1.##/cm^3
+ne=1.##/cm^3
+#local numeber of atoms along the line of sight
+den = (nH+ne)*2.*np.pi*dis
+
+
 
 def set_sources(j,i,num):
     global chid
@@ -18,19 +26,18 @@ def set_sources(j,i,num):
     exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
     sfile = i+diri+exam
     #un#subtracted source spectrum
-    load_pha(num,sfile+".pi")
+    load_pha(num+1,sfile+".pi")
     #background spectrum
-    load_bkg(num,i+"/background/summed_background_{0}_src.pi".format(i))
-    bkg = get_bkg(num)
-    bkg_scal = get_bkg_scale(num)
-    set_backscal(num,bkg_scal)
+    load_bkg(num+1,i+"/background/summed_background_{0}_src.pi".format(i))
+    bkg = get_bkg(num+1)
+    bkg_scal = get_bkg_scale(num+1)
+    set_backscal(num+1,bkg_scal)
     if chid:
 #Skipping background subtraction for now
-        subtract(num)
+        subtract(num+1)
 #group points in bins of at least 10
-        group_counts(num,8)
+        group_counts(num+1,8)
             
-
 
 
 #load_pha("3c273.pi")
@@ -76,12 +83,9 @@ def main(argv):
 #changed to cstat to check background issue
             stat = 'wstat'
 
-    set_analysis("energy")
 #    data = ascii.read('compare_plots/combined_source_cepob3b_list.ipac',format='ipac')
     data = np.genfromtxt('compare_plots/combined_source_cepob3b_list.csv',delimiter=',',names=True)
 
-#Set stat to use in fitting
-    set_stat(stat) 
 #array of epochs
     epochs = np.array(['9919','9920','10809','10810','10811','10812'])
 
@@ -90,7 +94,10 @@ def main(argv):
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat'))
     for j in data['ID']:
 #    for j in np.arange(1,10):
-#       try:
+       try:
+        #Set stat to use in fitting
+            set_analysis("energy")
+            set_stat(stat) 
 
 #get list of source ids
             idlist = data[j]
@@ -101,14 +108,19 @@ def main(argv):
 
 #source string
             scrstr = ''
+#source list
+            srclis = []
 #set up sources and ids
             if fids.size > 1:
                 for jj in num:
                    set_sources(idlist[fids][jj],epochs[fids][jj],num[jj])
                    scrstr = scrstr+','+str(num[jj])
+                   srclis.append(jj)
             else:
                 set_sources(idlist[fids][0],epochs[fids][0],num[0])
                 scrstr = ','+str(num[0])
+                srclis = num[0]
+            print srclis
 #remove leading ,
             scrstr = scrstr[1:]
 
@@ -119,22 +131,26 @@ def main(argv):
             bkg_cnt_rate = calc_data_sum(bkg_id=1)/get_exposure(bkg_id=1) 
 
 #paramter max values
-            psetmax = np.array([ 100., 50. ,9999.])
-            psetmin = np.array([ 1e-4, 0.01,-999.])
-            psetgus = np.array([ 0.02, 1.50,0.]   )
+            psetmax = np.array([100.0, 50. ,1./(den*10.**(-14)/(4.*np.pi))])
+            psetmin = np.array([ 1e-4, 0.10,1./(den*10.**(-14)/(4.*np.pi))])
+            psetgus = np.array([ 0.02, 1.50,1./(den*10.**(-14)/(4.*np.pi))])
         #Winston 2010 used xsraymond
         #      Scott Wolk says use xsvapec because it has more lines (9/1/16)
             umod = xswabs.a1*xsraymond.b1
             umod = xswabs.abs1*xsvapec.b1
             b1.cache=0
-            b1.kT = 1.5 #kT
+            b1.kT = psetgus[1] #kT
             b1.kT.min = psetmin[1]
             b1.kT.max = psetmax[1]
-              
+
+#            b1.norm = psetgus[2]
+#            b1.norm.min = psetmin[2]
+#            b1.norm.min = psetmax[2]
+#              
             #use a background model for the background
             #assume an initial extinction
             abs1.cache = 0
-            abs1.nH = 0.02
+            abs1.nH = psetgus[0]
             abs1.nH.min = psetmin[0]
             abs1.nH.max = psetmax[0] 
             thaw(abs1)
@@ -148,56 +164,65 @@ def main(argv):
 #fit the model using a string seperated by commas
 
             if fids.size == 3:
-                fit(0,1,2,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+                fit(1,2,3,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
             elif fids.size == 2:
-                fit(0,1,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+                fit(1,2,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
             elif fids.size == 1:
-                fit(0,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+                fit(1,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
             elif fids.size == 4:
-                fit(0,1,2,3,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+                fit(1,2,3,4,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
             elif fids.size == 5:
-                fit(0,1,2,3,4,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
+                fit(1,2,3,4,5,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
             elif fids.size == 6:
-                fit(0,1,2,3,4,5,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
-            print 'HERE'
+                fit(1,2,3,4,5,6,outfile='combined/ID_{0:5d}.dat'.format(int(j)).replace(' ','0'),clobber=True)
 
+            combined = calc_energy_flux()
 #         plot the unabs fit
 #            plot_fit()
             #best fit values absorbed values
             unh,ukt,unorm = get_fit_results().parvals
-            ####calc_stat_info()
+#            ####calc_stat_info()
+#            print '########################################'
+#            print calc_stat_info()
+#            print get_fit_results()
+#            print help(get_fit_results())
+#            print help(get_fit_results)
+#            print '########################################'
             uchi = get_fit_results().statval
             urst = get_fit_results().rstat
 #Switch from total model to just xsraymond model because of Doug Burke (2016/12/07)
-            unabs = sample_flux(b1,mine,maxe,num=1,numcores=3)
 	    #      save best fit model as fits file
             exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
             sfile = 'combined'+diri+exam
             save_model(sfile+"_{0}_umod.pi".format(stat),ascii=False,clobber=True)
-            save_data(sfile+"_{0}_data.pi".format(stat),ascii=False,clobber=True)
 #get 1sigma errors of parameters
             conf()
             get_conf()
             perr_a = get_conf_results()
             pmaxs = np.array(perr_a.parmaxes)
             pmins = np.array(perr_a.parmins)
-            gmaxs = [jj is None for jj in pmaxs]
-            gmins = [jj is None for jj in pmins]
+            gmaxs, = np.where([jj is None for jj in pmaxs])
+            gmins, = np.where([jj is None for jj in pmins])
 
-            print pmaxs,gmaxs
-            print pmins,gmins
 
 #replace none types with the limits
-            pmaxs[gmaxs] = psetmax[gmaxs]
-            pmins[gmins] = psetmin[gmins]
+            if gmaxs.size >= 1:
+                pmaxs[gmaxs] = psetmax[gmaxs]
+            if gmins.size >= 1:
+                pmins[gmins] = psetmin[gmins]
 
             perr = (pmaxs-pmins)/2.
         
             unHerr = perr[0]
             ukTerr = perr[1]
 
-            print 'nH err'
-            print unHerr
+            unabs = sample_flux(b1,mine,maxe,num=1000,numcores=1)
+#            print help(sample_flux)
+#            print '####################'
+#            print calc_energy_flux(id=2)
+#            print '####################'
+#            print calc_energy_flux(id=1)
+#            print '####################'
             
 
             
@@ -218,6 +243,8 @@ def main(argv):
 ####get the median fluxes
             anabs = anabs[0]
             unabs = unabs[0]
+            anabs = combined
+
 
 #no counting errors
             data_sum_err = 0.0
@@ -228,10 +255,11 @@ def main(argv):
             outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,int(j),ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr))
         
             clean()
-#       except:
-#########Write out -9999 if cannot find solution
-#            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
+       except:
+##########Write out -9999 if cannot find solution
+            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,int(j),-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
 
+            clean()
 #remove all trailing information
     outf.close()
 
