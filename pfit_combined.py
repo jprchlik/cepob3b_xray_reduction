@@ -191,6 +191,11 @@ def main(argv):
             uchi = get_fit_results().statval
             urst = get_fit_results().rstat
 #Switch from total model to just xsraymond model because of Doug Burke (2016/12/07)
+<<<<<<< HEAD
+=======
+#Asked the help desk and the response from Aneta is the flux is calculated based on the model parameters. Therefore, sampling should take into account uncertainties correctly.
+            unabs = sample_flux(b1,mine,maxe,num=100)
+>>>>>>> bb6056e8df97563d029f4e839e3fd41ebad890c1
 	    #      save best fit model as fits file
             exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
             sfile = 'combined'+diri+exam
