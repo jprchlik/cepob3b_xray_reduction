@@ -63,10 +63,10 @@ def main(argv):
 
 
 #    files = files[:1]
-    outf = open(i+'/prelim_out_{1}_{0:5d}.dat'.format(int(i),stat).replace(' ','0'),'w')
-    outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}{19:^15}{20:^15}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat','RA','Dec'))
-    for j in np.arange(len(files)):
-#    for j in np.arange(2):
+    outf = open(i+'/prelim_out_{1}_{0:5d}_test.dat'.format(int(i),stat).replace(' ','0'),'w')
+    outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}{19:^15}{20:^15}{21:^10}{22:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat','RA','Dec','b_uflux','b_aflux'))
+#    for j in np.arange(len(files)):
+    for j in np.arange(2):
        try:
 #write same integer to file srcnumber  (J. Prchlik 2017/01/05)
             j = int(files[j].replace(i+diri,'').split('_')[1])
@@ -205,18 +205,24 @@ def main(argv):
 ####get the median fluxes
             anabs = anabs[0]
             unabs = unabs[0]
+####get best fit flux
+            set_source(b1)
+            best_uflux = calc_energy_flux(mine,maxe)
+            set_source(abs1*b1)
+            best_aflux = calc_energy_flux(mine,maxe)
 
 #no counting errors
             data_sum_err = 0.0
 
             tot_c_err = 0.0
+            data_sum = calc_data_sum(mine,maxe)
 #write output to file
         
-            outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}{19:^15.8f}{20:^15.8f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,j,ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr,ra,dec))
+            outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}{19:^15.8f}{20:^15.8f}{21:^10.3e}{22:^10.3e}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,j,ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr,ra,dec,best_uflux,best_aflux))
         
        except:
 ########Write out -9999 if cannot find solution
-            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}{19:^15.8f}{20:^15.8f}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,ra,dec))
+            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}{19:^15.8f}{20:^15.8f}{21:^10.3e}{22:^10.3e}\n'.format(-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,j,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,ra,dec,-9999,-9999))
     outf.close()
 
 if __name__ == "__main__":
