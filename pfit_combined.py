@@ -6,6 +6,8 @@ from sherpa.astro.utils import _charge_e as q # ~1.6e-9 ergs/1 keV photon (nist.
 import glob
 import sys
 import getopt
+from crates_contrib.utils import SimpleCoordTransform
+import sherpa_contrib.utils as utils
 
 sys.path.append("/home/jakub/anaconda")
 sys.path.append("/home/jakub/wandajune_home/MyModules")
@@ -22,7 +24,7 @@ den = (nH+ne)*2.*np.pi*dis
 
 def set_sources(j,i,num):
     global chid
-    print j,i,num
+    print j,i,num+1
     exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
     sfile = i+diri+exam
     #un#subtracted source spectrum
@@ -37,6 +39,8 @@ def set_sources(j,i,num):
         subtract(num+1)
 #group points in bins of at least 10
         group_counts(num+1,8)
+    tr = SimpleCoordTransform(i+'/obs'+i+'_img.fits')
+    return sfile,tr
             
 
 
@@ -91,20 +95,26 @@ def main(argv):
 
 #    files = files[:1]
     outf = open('combined/prelim_out_{1}.dat'.format(i,stat).replace(' ','0'),'w')
-    outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat'))
-    for j in data['ID']:
-#    for j in np.arange(1,10):
+    outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}{19:^15}{20:^15}{21:^10}{22:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat','RA','Dec','b_uflux','b_aflux'))
+#    for j in data['ID']:
+    for j in data['ID'][-100:]:
+#    for j in np.arange(1,3):
        try:
         #Set stat to use in fitting
             set_analysis("energy")
             set_stat(stat) 
 
 #get list of source ids
+            j = int(j)
+            print '###############################'
+            print 'ID NUMBER {0:4d}'.format(j)
             idlist = data[j]
             idlist = np.array([idlist['e09919_src_num'],idlist['e09920_src_num'],idlist['e10809_src_num'],idlist['e10810_src_num'],idlist['e10811_src_num'],idlist['e10812_src_num']])
             #get indexes of matches
+            print idlist
             fids, = np.where(idlist > 0)
             num = np.arange(fids.size)
+            print num
 
 #source string
             scrstr = ''
@@ -113,16 +123,24 @@ def main(argv):
 #set up sources and ids
             if fids.size > 1:
                 for jj in num:
-                   set_sources(idlist[fids][jj],epochs[fids][jj],num[jj])
+                   sfile,tr = set_sources(idlist[fids][jj],epochs[fids][jj],num[jj])
                    scrstr = scrstr+','+str(num[jj])
                    srclis.append(jj)
             else:
-                set_sources(idlist[fids][0],epochs[fids][0],num[0])
+                sfile,tr = set_sources(idlist[fids][0],epochs[fids][0],num[0])
                 scrstr = ','+str(num[0])
+                print scrstr
                 srclis = num[0]
             print srclis
 #remove leading ,
             scrstr = scrstr[1:]
+#Source ra and dec
+            tcr = utils.pycrates.read_file(sfile+"_srcreg.fits[cols x,y]")
+            sx1 = utils.pycrates.copy_colvals(tcr,"x")
+            sy1 = utils.pycrates.copy_colvals(tcr,"y")
+            (ra, dec) = tr.convert("sky","world",sx1[0],sy1[0])
+            ra,dec = float(ra),float(dec)
+
 
            #old worthless stuff that remains for convience 
             data_sum = calc_data_sum(mine,maxe)  
@@ -131,17 +149,29 @@ def main(argv):
             bkg_cnt_rate = calc_data_sum(bkg_id=1)/get_exposure(bkg_id=1) 
 
 #paramter max values
-            psetmax = np.array([100.0, 50. ,1./(den*10.**(-14)/(4.*np.pi))])
+#           guess nH values
+            av = data[j]['phot_av']
+            try:
+               av = float(av)
+            except ValueError:
+               av = 2.5 #cloud average
+            if av < -100: av = 2.5
+            avg = AvnH*av*1.e-22 #convert av to nH
+            print 'Guess nH  = {0:3.2e}e22, Av = {1:3.2f}'.format(avg,av)
+            ne = 0.03 #https://arxiv.org/abs/1308.4010 electron density in diffuse molecular clouds
+            bnorm = 1.e-14/(4.*np.pi*dis**2.)*dis*2.*np.pi #http://cxc.harvard.edu/sherpa/ahelp/xsapec.html
+            psetmax = np.array([5.0, 10. ,1./(den*10.**(-14)/(4.*np.pi))])
             psetmin = np.array([ 1e-4, 0.10,1./(den*10.**(-14)/(4.*np.pi))])
-            psetgus = np.array([ 0.02, 1.50,1./(den*10.**(-14)/(4.*np.pi))])
+            psetgus = np.array([avg, 1.50,1./(den*10.**(-14)/(4.*np.pi))])
         #Winston 2010 used xsraymond
         #      Scott Wolk says use xsvapec because it has more lines (9/1/16)
-            umod = xswabs.a1*xsraymond.b1
-            umod = xswabs.abs1*xsvapec.b1
+#            umod = xswabs.a1*xsraymond.b1
+            umod = xswabs.abs1*xsvapec.b1 #http://cxc.harvard.edu/sherpa/ahelp/xsvapec.html
             b1.cache=0
             b1.kT = psetgus[1] #kT
             b1.kT.min = psetmin[1]
             b1.kT.max = psetmax[1]
+#            b1.norm   = 1.42317e-05
 
 #            b1.norm = psetgus[2]
 #            b1.norm.min = psetmin[2]
@@ -157,7 +187,7 @@ def main(argv):
 
 
             for p in num:
-                set_source(p,umod)
+                set_source(p+1,umod)
 #set the maximum and minimum range to fit
             notice(mine,maxe)
 
@@ -191,11 +221,7 @@ def main(argv):
             uchi = get_fit_results().statval
             urst = get_fit_results().rstat
 #Switch from total model to just xsraymond model because of Doug Burke (2016/12/07)
-<<<<<<< HEAD
-=======
 #Asked the help desk and the response from Aneta is the flux is calculated based on the model parameters. Therefore, sampling should take into account uncertainties correctly.
-            unabs = sample_flux(b1,mine,maxe,num=100)
->>>>>>> bb6056e8df97563d029f4e839e3fd41ebad890c1
 	    #      save best fit model as fits file
             exam = 'sers_{0:4d}'.format(int(j)).replace(' ','0')
             sfile = 'combined'+diri+exam
@@ -221,7 +247,7 @@ def main(argv):
             unHerr = perr[0]
             ukTerr = perr[1]
 
-            unabs = sample_flux(b1,mine,maxe,num=1000,numcores=1)
+            unabs = sample_flux(b1,mine,maxe,num=1000,numcores=3)
 #            print help(sample_flux)
 #            print '####################'
 #            print calc_energy_flux(id=2)
@@ -249,6 +275,12 @@ def main(argv):
             anabs = anabs[0]
             unabs = unabs[0]
             anabs = combined
+####get best fit flux
+            set_source(b1)
+            best_uflux = calc_energy_flux(mine,maxe)
+            set_source(abs1*b1)
+            best_aflux = calc_energy_flux(mine,maxe)
+
 
 
 #no counting errors
@@ -257,12 +289,12 @@ def main(argv):
             tot_c_err = 0.0
 #write output to file
         
-            outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,int(j),ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr))
+            outf.write('{8:^10d}{0:^10.3e}{1:^10.3e}{2:^10.3e}{3:^10.3e}{4:^10.1f}{5:^10.1f}{6:^10.1f}{7:^10.1f}{9:^10.4f}{10:^10.4f}{17:^10.4f}{18:^10.4f}{11:^10.4f}{12:^10.4f}{13:^10.4f}{14:^10.4f}{15:^10.4f}{16:^10.4f}{19:^15.8f}{20:^15.8f}{21:^10.3e}{22:^10.3e}\n'.format(unabs,unabs_err,anabs,anabs_err,data_sum,data_sum_err,data_sum-bkg_sum,tot_c_err,int(j),ukt,unh,uchi,urst,akt,anh,achi,arst,ukTerr,unHerr,ra,dec,best_uflux,best_aflux))
         
             clean()
        except:
 ##########Write out -9999 if cannot find solution
-            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,int(j),-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999))
+            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10d}{5:^10d}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}{19:^15.8f}{20:^15.8f}{21:^10.3e}{22:^10.3e}\n'.format(-999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,int(j),-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,ra,dec,-9999,-9999))
 
             clean()
 #remove all trailing information
