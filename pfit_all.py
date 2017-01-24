@@ -65,8 +65,8 @@ def main(argv):
 #    files = files[:1]
     outf = open(i+'/prelim_out_{1}_{0:5d}_test.dat'.format(int(i),stat).replace(' ','0'),'w')
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}{19:^15}{20:^15}{21:^10}{22:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat','RA','Dec','b_uflux','b_aflux'))
-#    for j in np.arange(len(files)):
-    for j in np.arange(2):
+    for j in np.arange(len(files)):
+#    for j in np.arange(2):
        try:
 #write same integer to file srcnumber  (J. Prchlik 2017/01/05)
             j = int(files[j].replace(i+diri,'').split('_')[1])
@@ -135,6 +135,7 @@ def main(argv):
             b1.kT = 1.5 #kT
             b1.kT.min = psetmin[1]
             b1.kT.max = psetmax[1]
+            b1.norm   = 1.42317e-05
 #            b1.norm = 2.1599743e+21 #cm
             
             #use a background model for the background
