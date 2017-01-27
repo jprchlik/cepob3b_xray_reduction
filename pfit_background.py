@@ -162,17 +162,17 @@ for i,j in enumerate(dirs):
             #best fit values absorbed values
 #            k = raw_input('Press Enter to Continue')
             colors = ['red','blue','green','orange']
-#            for p in range(4):
-#                load_data(p+4,"{0:4d}/background/e{0:5d}_I{1:2d}.pi".format(int(j),p+1).replace(' ','0'))
-#                bdata = get_data(p+4)
-#                print bdata.get_areascal()
-#                print bdata.get_dims()
-#                print bdata._get_units()
-#                print set_areascal(p+4,50.)
-#                notice(mine,maxe)
-#                get_data_plot_prefs()['symbolcolor'] = colors[p]
-#                get_data_plot_prefs()['errcolor'] = colors[p]
-#                plot_data(id=p+4,overplot=True)
+            for p in range(4):
+                load_data(p+4,"{0:4d}/background/e{0:5d}_I{1:2d}.pi".format(int(j),p+1).replace(' ','0'))
+                bdata = get_data(p+4)
+                print bdata.get_areascal()
+                print bdata.get_dims()
+                print bdata._get_units()
+                print set_areascal(p+4,50.)
+                notice(mine,maxe)
+                get_data_plot_prefs()['symbolcolor'] = colors[p]
+                get_data_plot_prefs()['errcolor'] = colors[p]
+                plot_data(id=p+4,overplot=True)
             load_data(10,'{0:4d}/background/summed_background_{0:4d}_src.pi'.format(int(j)).replace(' ','0'))
             load_bkg('{0:4d}/background/summed_background_{0:4d}_src.pi'.format(int(j)).replace(' ','0'))
             notice(mine,maxe)
