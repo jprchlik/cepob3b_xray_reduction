@@ -166,7 +166,7 @@ def main(argv):
             print 'Guess nH  = {0:3.2e}e22, Av = {1:3.2f}'.format(avg,av)
             ne = 0.03 #https://arxiv.org/abs/1308.4010 electron density in diffuse molecular clouds
             bnorm = 1.e-14/(4.*np.pi*dis**2.)*dis*2.*np.pi #http://cxc.harvard.edu/sherpa/ahelp/xsapec.html
-            psetmax = np.array([5.0, 10. ,1./(den*10.**(-14)/(4.*np.pi))])
+            psetmax = np.array([5.0, 3.5 ,1./(den*10.**(-14)/(4.*np.pi))])
             psetmin = np.array([ 1e-4, 0.10,1./(den*10.**(-14)/(4.*np.pi))])
             psetgus = np.array([avg, 1.50,1./(den*10.**(-14)/(4.*np.pi))])
         #Winston 2010 used xsraymond
