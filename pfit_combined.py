@@ -92,12 +92,16 @@ def main(argv):
 
 #array of epochs
     epochs = np.array(['9919','9920','10809','10810','10811','10812'])
+#only get ones that have lbol and possibly fit
+    fitlist, = np.where(((data['e09919_src_num'] > 0.) | (data['e09920_src_num'] > 0.) | (data['e10809_src_num'] > 0.) | (data['e10810_src_num'] > 0.) | (data['e10811_src_num'] > 0. ) | (data['e10812_src_num'] > 0.)) & (data['teff'] > -100.))
 
+    data = data[fitlist]
+    print '{0:4d} sources found that have temperatures'.format(fitlist.size)
 #    files = files[:1]
     outf = open('combined/prelim_out_{1}.dat'.format(i,stat).replace(' ','0'),'w')
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}{19:^15}{20:^15}{21:^10}{22:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat','RA','Dec','b_uflux','b_aflux'))
 #    for j in data['ID']:
-    for j in data['ID'][-100:]:
+    for j in data['ID']:
 #    for j in np.arange(1,3):
        try:
         #Set stat to use in fitting
@@ -108,13 +112,17 @@ def main(argv):
             j = int(j)
             print '###############################'
             print 'ID NUMBER {0:4d}'.format(j)
-            idlist = data[j]
-            idlist = np.array([idlist['e09919_src_num'],idlist['e09920_src_num'],idlist['e10809_src_num'],idlist['e10810_src_num'],idlist['e10811_src_num'],idlist['e10812_src_num']])
+            idnum, = np.where(data['ID'] == j)
+            print "Number in list"
+            print idnum
+
+            idlist = data[idnum]
+            idlist = np.array([int(idlist['e09919_src_num']),int(idlist['e09920_src_num']),int(idlist['e10809_src_num']),int(idlist['e10810_src_num']),int(idlist['e10811_src_num']),int(idlist['e10812_src_num'])])
             #get indexes of matches
-            print idlist
+            print idlist.T
+            print np.where(idlist.T > 0)
             fids, = np.where(idlist > 0)
             num = np.arange(fids.size)
-            print num
 
 #source string
             scrstr = ''
@@ -129,9 +137,7 @@ def main(argv):
             else:
                 sfile,tr = set_sources(idlist[fids][0],epochs[fids][0],num[0])
                 scrstr = ','+str(num[0])
-                print scrstr
                 srclis = num[0]
-            print srclis
 #remove leading ,
             scrstr = scrstr[1:]
 #Source ra and dec
@@ -150,7 +156,7 @@ def main(argv):
 
 #paramter max values
 #           guess nH values
-            av = data[j]['phot_av']
+            av = data[idnum]['phot_av']
             try:
                av = float(av)
             except ValueError:
