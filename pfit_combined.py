@@ -128,16 +128,23 @@ def main(argv):
             scrstr = ''
 #source list
             srclis = []
+#total counts in observation
+            data_sum = 0.
+#set up loop id variable
+            kk = 1
 #set up sources and ids
             if fids.size > 1:
                 for jj in num:
                    sfile,tr = set_sources(idlist[fids][jj],epochs[fids][jj],num[jj])
                    scrstr = scrstr+','+str(num[jj])
                    srclis.append(jj)
+                   data_sum = data_sum+calc_data_sum(mine,maxe,id=kk)
+                   kk +=1  
             else:
                 sfile,tr = set_sources(idlist[fids][0],epochs[fids][0],num[0])
                 scrstr = ','+str(num[0])
                 srclis = num[0]
+                data_sum = data_sum+calc_data_sum(mine,maxe,id=kk)
 #remove leading ,
             scrstr = scrstr[1:]
 #Source ra and dec
@@ -149,7 +156,6 @@ def main(argv):
 
 
            #old worthless stuff that remains for convience 
-            data_sum = calc_data_sum(mine,maxe)  
             data_cnt_rate = calc_data_sum()/get_exposure() 
             bkg_sum = calc_data_sum(mine,maxe,bkg_id=1)  
             bkg_cnt_rate = calc_data_sum(bkg_id=1)/get_exposure(bkg_id=1) 
@@ -290,7 +296,7 @@ def main(argv):
 
 
 #no counting errors
-            data_sum_err = 0.0
+            data_sum_err = np.sqrt(data_sum) 
 
             tot_c_err = 0.0
 #write output to file
