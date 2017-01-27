@@ -52,9 +52,9 @@ for i in dirs:
     counts = Table(counts1[1].data)
     counts = counts['RA','DEC','NET_COUNTS','NET_COUNTS_ERR']
     counts.rename_column('DEC','Dec')
-    fluxes = ascii.read(i+'/prelim_out_chi2datavar_{0:5d}_3keV.dat'.format(int(i)).replace(' ','0'))
+    fluxes = ascii.read(i+'/prelim_out_chi2datavar_{0:5d}.dat'.format(int(i)).replace(' ','0'))
     try:
-        wluxes = ascii.read(i+'/prelim_out_wstat_{0:5d}_3keV.dat'.format(int(i)).replace(' ','0'))
+        wluxes = ascii.read(i+'/prelim_out_wstat_{0:5d}.dat'.format(int(i)).replace(' ','0'))
     except:
         print 'No wstat'
 
