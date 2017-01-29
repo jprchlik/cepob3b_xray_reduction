@@ -102,7 +102,8 @@ def main(argv):
     outf = open('combined/prelim_out_{1}_frozen_nH.dat'.format(i,stat).replace(' ','0'),'w')
     outf.write('{8:^10}{0:^10}{1:^10}{2:^10}{3:^10}{4:^10}{5:^10}{6:^10}{7:^10}{9:^10}{10:^10}{11:^10}{12:^10}{13:^10}{14:^10}{15:^10}{16:^10}{17:^10}{18:^10}{19:^15}{20:^15}{21:^10}{22:^10}{23:^10}\n'.format('uflux','uflux_err','aflux','aflux_err','cnts',' cnts_err',' ncnts',' ncnts_err','src','ukT','unH','ukterr','unHerr','uchi','urstat','akT','anH','achi','arstat','RA','Dec','b_uflux','b_aflux','num_fit'))
 #    for j in data['ID']:
-    for j in data['ID'][-5:]:
+    for j in data['ID'][:180]:
+#    for j in data['ID'][180:]:
 #    for j in np.arange(1,3):
        try:
         #Set stat to use in fitting
@@ -312,7 +313,7 @@ def main(argv):
             clean()
        except:
 ###########Write out -9999 if cannot find solution
-            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10.1f}{5:^10.1f}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}{19:^15.8f}{20:^15.8f}{21:^10.5e}{22:^10.5e}{23:10d}\n'.format(-999,-9999,-9999,-9999,data_sum,data_sum_err,-9999,-9999,int(j),-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,ra,dec,-9999,-9999,numfit))
+            outf.write('{8:^10d}{0:^10d}{1:^10d}{2:^10d}{3:^10d}{4:^10.1f}{5:^10.1f}{6:^10d}{7:^10d}{9:^10d}{10:^10d}{11:^10d}{12:^10d}{13:^10d}{14:^10d}{15:^10d}{16:10d}{17:10d}{18:10d}{19:^15.8f}{20:^15.8f}{21:^10d}{22:^10d}{23:10d}\n'.format(-999,-9999,-9999,-9999,data_sum,data_sum_err,-9999,-9999,int(j),-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,-9999,ra,dec,-9999,-9999,numfit))
 #
             clean()
 #remove all trailing information
